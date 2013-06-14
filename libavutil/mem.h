@@ -114,6 +114,19 @@ av_alloc_size(1, 2) static inline void *av_malloc_array(size_t nmemb, size_t siz
 void *av_realloc(void *ptr, size_t size) av_alloc_size(2);
 
 /**
+ * Allocate or reallocate an block of memory.
+ * If *ptr is NULL and size > 0, allocate a new block. If
+ * size is zero, free the memory block pointed to by ptr.
+ * @param ptr Pointer to a pointer to a memory block already allocated
+ * with av_realloc(), or pointer to a pointer to NULL.
+ * The pointer is updated on success, or freed on failure.
+ * @param size Size in bytes for the memory block to be allocated or
+ * reallocated
+ * @return Zero on success, an AVERROR error code on failure.
+ */
+int av_reallocp(void *ptr, size_t size);
+
+/**
  * Allocate or reallocate an array.
  * If ptr is NULL and nmemb > 0, allocate a new block. If
  * nmemb is zero, free the memory block pointed to by ptr.
