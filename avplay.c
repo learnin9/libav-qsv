@@ -2035,7 +2035,7 @@ static int stream_component_open(VideoState *is, int stream_index)
 
     opts = filter_codec_opts(codec_opts, avctx->codec_id, ic, ic->streams[stream_index], NULL);
 
-    codec = avcodec_find_decoder(avctx->codec_id);
+    codec = avcodec_find_decoder_by_name("h264_qsv");
     avctx->debug_mv          = debug_mv;
     avctx->workaround_bugs   = workaround_bugs;
     avctx->idct_algo         = idct;
@@ -2944,7 +2944,7 @@ int main(int argc, char **argv)
     if (display_disable) {
         video_disable = 1;
     }
-    flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
+    flags = SDL_INIT_VIDEO | SDL_INIT_TIMER;
 #if !defined(__MINGW32__) && !defined(__APPLE__)
     flags |= SDL_INIT_EVENTTHREAD; /* Not supported on Windows or Mac OS X */
 #endif
