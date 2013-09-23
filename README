@@ -3,6 +3,13 @@ information
     very experimental
     encoding speed is slow
 
+requirements
+    Intel Media SDK 2013 R2 : http://software.intel.com/en-us/vcsource/tools/media-sdk
+    mfx_dispatch : https://github.com/lu-zero/mfx_dispatch
+
+build
+    https://github.com/lu-zero/mfx_dispatch/wiki/Libav-integration
+
 support
     intel media sdk api version : 1.1
     codec : H.264, MPEG-2
