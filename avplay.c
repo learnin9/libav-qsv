@@ -2035,7 +2035,19 @@ static int stream_component_open(VideoState *is, int stream_index)
 
     opts = filter_codec_opts(codec_opts, avctx->codec_id, ic, ic->streams[stream_index], NULL);
 
-    codec = avcodec_find_decoder_by_name("h264_qsv");
+    switch (avctx->codec_id) {
+    case AV_CODEC_ID_H264:
+        codec = avcodec_find_decoder_by_name("h264_qsv");
+        break;
+    case AV_CODEC_ID_MPEG1VIDEO:
+    case AV_CODEC_ID_MPEG2VIDEO:
+        codec = avcodec_find_decoder_by_name("mpeg2_qsv");
+        break;
+    case AV_CODEC_ID_VC1:
+    default:
+        codec = avcodec_find_decoder(avctx->codec_id);
+        break;
+    }
     avctx->debug_mv          = debug_mv;
     avctx->workaround_bugs   = workaround_bugs;
     avctx->idct_algo         = idct;
