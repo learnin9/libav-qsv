@@ -561,18 +561,19 @@ static void do_video_out(AVFormatContext *s,
         }
 
         if (got_packet) {
-            av_log(NULL, AV_LOG_VERBOSE,
-                   "Enc Frm-In:(pts=%10"PRId64", pts=%10"PRId64", dts=%10"PRId64", ret=%6d) "
-                   "Pkt-Out:(pts=%10"PRId64", dts=%10"PRId64") "
-                   "Rescale:(pts=%10"PRId64", dts=%10"PRId64")\n",
-                   in_picture->pts     == AV_NOPTS_VALUE ? -1 : in_picture->pts,
-                   in_picture->pkt_pts == AV_NOPTS_VALUE ? -1 : in_picture->pkt_pts,
-                   in_picture->pkt_dts == AV_NOPTS_VALUE ? -1 : in_picture->pkt_dts,
-                   ret,
-                   pkt.pts == AV_NOPTS_VALUE ? -1 : pkt.pts,
-                   pkt.pts == AV_NOPTS_VALUE ? -1 : pkt.dts,
-                   pkt.pts == AV_NOPTS_VALUE ? -1 : av_rescale_q(pkt.pts, enc->time_base, ost->st->time_base),
-                   pkt.dts == AV_NOPTS_VALUE ? -1 : av_rescale_q(pkt.dts, enc->time_base, ost->st->time_base));
+            if (av_log_get_level() >= AV_LOG_VERBOSE)
+                av_log(NULL, AV_LOG_VERBOSE,
+                       "Enc Frm-In:(pts=%10"PRId64", pts=%10"PRId64", dts=%10"PRId64", ret=%6d) "
+                       "Pkt-Out:(pts=%10"PRId64", dts=%10"PRId64") "
+                       "Rescale:(pts=%10"PRId64", dts=%10"PRId64")\n",
+                       in_picture->pts     == AV_NOPTS_VALUE ? -1 : in_picture->pts,
+                       in_picture->pkt_pts == AV_NOPTS_VALUE ? -1 : in_picture->pkt_pts,
+                       in_picture->pkt_dts == AV_NOPTS_VALUE ? -1 : in_picture->pkt_dts,
+                       ret,
+                       pkt.pts == AV_NOPTS_VALUE ? -1 : pkt.pts,
+                       pkt.pts == AV_NOPTS_VALUE ? -1 : pkt.dts,
+                       pkt.pts == AV_NOPTS_VALUE ? -1 : av_rescale_q(pkt.pts, enc->time_base, ost->st->time_base),
+                       pkt.dts == AV_NOPTS_VALUE ? -1 : av_rescale_q(pkt.dts, enc->time_base, ost->st->time_base));
 
             if (pkt.pts != AV_NOPTS_VALUE)
                 pkt.pts = av_rescale_q(pkt.pts, enc->time_base, ost->st->time_base);
@@ -588,12 +589,13 @@ static void do_video_out(AVFormatContext *s,
                 fprintf(ost->logfile, "%s", enc->stats_out);
             }
         } else {
-            av_log(NULL, AV_LOG_VERBOSE,
-                   "Enc Frm-In:(pts=%10"PRId64", pts=%10"PRId64", dts=%10"PRId64", ret=%6d)\n",
-                   in_picture->pts     == AV_NOPTS_VALUE ? -1 : in_picture->pts,
-                   in_picture->pkt_pts == AV_NOPTS_VALUE ? -1 : in_picture->pkt_pts,
-                   in_picture->pkt_dts == AV_NOPTS_VALUE ? -1 : in_picture->pkt_dts,
-                   ret);
+            if (av_log_get_level() >= AV_LOG_VERBOSE)
+                av_log(NULL, AV_LOG_VERBOSE,
+                       "Enc Frm-In:(pts=%10"PRId64", pts=%10"PRId64", dts=%10"PRId64", ret=%6d)\n",
+                       in_picture->pts     == AV_NOPTS_VALUE ? -1 : in_picture->pts,
+                       in_picture->pkt_pts == AV_NOPTS_VALUE ? -1 : in_picture->pkt_pts,
+                       in_picture->pkt_dts == AV_NOPTS_VALUE ? -1 : in_picture->pkt_dts,
+                       ret);
         }
     }
     ost->sync_opts++;
@@ -931,15 +933,16 @@ static void flush_encoders(void)
                 pkt.size = 0;
 
                 ret = encode(enc, &pkt, NULL, &got_packet);
-                av_log(NULL, AV_LOG_VERBOSE,
-                       "Enc Frm-In:(ret=%6d) "
-                       "Pkt-Out:(pts=%10"PRId64", dts=%10"PRId64") "
-                       "Rescale:(pts=%10"PRId64", dts=%10"PRId64")\n",
-                       ret,
-                       pkt.pts == AV_NOPTS_VALUE ? -1 : pkt.pts,
-                       pkt.pts == AV_NOPTS_VALUE ? -1 : pkt.dts,
-                       pkt.pts == AV_NOPTS_VALUE ? -1 : av_rescale_q(pkt.pts, enc->time_base, ost->st->time_base),
-                       pkt.dts == AV_NOPTS_VALUE ? -1 : av_rescale_q(pkt.dts, enc->time_base, ost->st->time_base));
+                if (av_log_get_level() >= AV_LOG_VERBOSE)
+                    av_log(NULL, AV_LOG_VERBOSE,
+                           "Enc Frm-In:(ret=%6d) "
+                           "Pkt-Out:(pts=%10"PRId64", dts=%10"PRId64") "
+                           "Rescale:(pts=%10"PRId64", dts=%10"PRId64")\n",
+                           ret,
+                           pkt.pts == AV_NOPTS_VALUE ? -1 : pkt.pts,
+                           pkt.pts == AV_NOPTS_VALUE ? -1 : pkt.dts,
+                           pkt.pts == AV_NOPTS_VALUE ? -1 : av_rescale_q(pkt.pts, enc->time_base, ost->st->time_base),
+                           pkt.dts == AV_NOPTS_VALUE ? -1 : av_rescale_q(pkt.dts, enc->time_base, ost->st->time_base));
                 if (ret < 0) {
                     av_log(NULL, AV_LOG_FATAL, "%s encoding failed\n", desc);
                     exit_program(1);
@@ -1187,27 +1190,29 @@ static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
             for (i = 0; i < ist->nb_filters; i++)
                 av_buffersrc_add_frame(ist->filters[i]->filter, NULL);
         }
-        av_log(NULL, AV_LOG_VERBOSE,
-               "Dec Pkt-In:(pts=%10"PRId64", dts=%10"PRId64", ret=%6d)\n",
-               pkt->pts == AV_NOPTS_VALUE ? -1 : pkt->pts,
-               pkt->dts == AV_NOPTS_VALUE ? -1 : pkt->dts,
-               ret);
+        if (av_log_get_level() >= AV_LOG_VERBOSE)
+            av_log(NULL, AV_LOG_VERBOSE,
+                   "Dec Pkt-In:(pts=%10"PRId64", dts=%10"PRId64", ret=%6d)\n",
+                   pkt->pts == AV_NOPTS_VALUE ? -1 : pkt->pts,
+                   pkt->dts == AV_NOPTS_VALUE ? -1 : pkt->dts,
+                   ret);
         return ret;
     }
 
     decoded_frame->pts = guess_correct_pts(&ist->pts_ctx, decoded_frame->pkt_pts,
                                            decoded_frame->pkt_dts);
 
-    av_log(NULL, AV_LOG_VERBOSE,
-           "Dec Pkt-In:(pts=%10"PRId64", dts=%10"PRId64", ret=%6d) "
-           "Frm-Out:(pts=%10"PRId64", dts=%10"PRId64") "
-           "Guess:(pts=%10"PRId64")\n",
-           pkt->pts == AV_NOPTS_VALUE ? -1 : pkt->pts,
-           pkt->dts == AV_NOPTS_VALUE ? -1 : pkt->dts,
-           ret,
-           decoded_frame->pkt_pts == AV_NOPTS_VALUE ? -1 : decoded_frame->pkt_pts,
-           decoded_frame->pkt_dts == AV_NOPTS_VALUE ? -1 : decoded_frame->pkt_dts,
-           decoded_frame->pts == AV_NOPTS_VALUE ? -1 : decoded_frame->pts);
+    if (av_log_get_level() >= AV_LOG_VERBOSE)
+        av_log(NULL, AV_LOG_VERBOSE,
+               "Dec Pkt-In:(pts=%10"PRId64", dts=%10"PRId64", ret=%6d) "
+               "Frm-Out:(pts=%10"PRId64", dts=%10"PRId64") "
+               "Guess:(pts=%10"PRId64")\n",
+               pkt->pts == AV_NOPTS_VALUE ? -1 : pkt->pts,
+               pkt->dts == AV_NOPTS_VALUE ? -1 : pkt->dts,
+               ret,
+               decoded_frame->pkt_pts == AV_NOPTS_VALUE ? -1 : decoded_frame->pkt_pts,
+               decoded_frame->pkt_dts == AV_NOPTS_VALUE ? -1 : decoded_frame->pkt_dts,
+               decoded_frame->pts == AV_NOPTS_VALUE ? -1 : decoded_frame->pts);
 
     pkt->size = 0;
 
