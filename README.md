@@ -27,14 +27,12 @@ This is fork repository of https://github.com/lu-zero/libav/tree/qsv-simple
 
 ## Example
 QSV encode
-
-    `avconv -i "input.ts" -b 2000k -maxrate 2000k -c:v h264_qsv "output.mp4"`
-    `avconv -i "input.ts" -b 4000k -c:v h264_qsv "output.mp4"`
-    `avconv -i "input.ts" -q 20 -c:v h264_qsv "output.mp4"`
-    `avconv -i "input.mp4" -q 20 -c:v mpeg2_qsv "output.ts"`
-    `avconv -vsync cfr -i "input.mpg" -q 25 -i_qfactor 1 -i_qoffset -3 -b_qfactor 1 -b_qoffset 2 -c:v h264_qsv "output.mp4"`
+`avconv -i "input.ts" -b 2000k -maxrate 2000k -c:v h264_qsv "output.mp4"`
+`avconv -i "input.ts" -b 4000k -c:v h264_qsv "output.mp4"`
+`avconv -i "input.ts" -q 20 -c:v h264_qsv "output.mp4"`
+`avconv -i "input.mp4" -q 20 -c:v mpeg2_qsv "output.ts"`
+`avconv -vsync cfr -i "input.mpg" -q 25 -i_qfactor 1 -i_qoffset -3 -b_qfactor 1 -b_qoffset 2 -c:v h264_qsv "output.mp4"`
 
 QSV decode/encode
-
-    `avconv -c:v mpeg2_qsv -i "input.mpg" -q 20 -c:v h264_qsv "output.mp4"`
-    `avconv -c:v h264_qsv -i "input.mp4" -b 8000k -maxrate 9800k -c:v mpeg2_qsv "output.mpg"`
+`avconv -c:v mpeg2_qsv -i "input.mpg" -q 20 -c:v h264_qsv "output.mp4"`
+`avconv -c:v h264_qsv -i "input.mp4" -b 8000k -maxrate 9800k -c:v mpeg2_qsv "output.mpg"`
