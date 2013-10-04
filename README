@@ -1,44 +1,12 @@
-information
-    This is fork repository of https://github.com/lu-zero/libav/tree/qsv-simple .
-    very experimental
-    encoding speed is slow
+Libav README
+------------
 
-requirements
-    Intel Media SDK 2013 R2 : http://software.intel.com/en-us/vcsource/tools/media-sdk
-    mfx_dispatch : https://github.com/lu-zero/mfx_dispatch
+1) Documentation
+----------------
 
-build
-    https://github.com/lu-zero/mfx_dispatch/wiki/Libav-integration
+* Read the documentation in the doc/ directory.
 
-support
-    intel media sdk api version : 1.1
-    codec : H.264, MPEG-2
-    rate control method : CBR, VBR, CQP
+2) Licensing
+------------
 
-todo
-    speed up encoding (multi threading)
-    improve memory management (queue, memory pool)
-    add option (aud, sei, profile, level, qpi, qpp, qpb, , ,)
-
-codec name
-    H.264 : h264_qsv
-    MPEG-2 : mpeg2_qsv
-
-rate control option
-    CBR : -b 2000k -maxrate 2000k
-    VBR : -b 4000k -maxrate 8000k
-    CQP : -q 20
-
-option
-    b, maxrate, q, i_qfactor, i_qoffset, b_qfactor, b_qoffset, g, bf, refs, coder
-
-example (encode by QSV)
-    avconv -i "input.ts" -b 2000k -maxrate 2000k -c:v h264_qsv "output.mp4"
-    avconv -i "input.ts" -b 4000k -c:v h264_qsv "output.mp4"
-    avconv -i "input.ts" -q 20 -c:v h264_qsv "output.mp4"
-    avconv -i "input.mp4" -q 20 -c:v mpeg2_qsv "output.ts"
-    avconv -vsync cfr -i "input.mpg" -q 25 -i_qfactor 1 -i_qoffset -3 -b_qfactor 1 -b_qoffset 2 -c:v h264_qsv "output.mp4"
-
-example (decode by QSV, encode by QSV)
-    avconv -c:v mpeg2_qsv -i "input.mpg" -q 20 -c:v h264_qsv "output.mp4"
-    avconv -c:v h264_qsv -i "input.mp4" -b 8000k -maxrate 9800k -c:v mpeg2_qsv "output.mpg"
+* See the LICENSE file.
