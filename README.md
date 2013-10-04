@@ -6,9 +6,10 @@ This is fork repository of https://github.com/lu-zero/libav/tree/qsv-simple
 
 ## Build
    * https://github.com/lu-zero/mfx_dispatch/wiki/Libav-integration
+   * `./configure --enable-qsv --enable-memalign-hack --extra-libs="-lsupc++ -lstdc++"`
 
 ## Support
-   * Intel Media SDK API version : 1.1
+   * Intel Media SDK API : v1.1
    * Codec : H.264, MPEG-2
    * Rate control method : CBR, VBR, CQP
 
