@@ -31,7 +31,7 @@ QSV encode
     `avconv -i "input.ts" -b 4000k -c:v h264_qsv "output.mp4"`
     `avconv -i "input.ts" -q 20 -c:v h264_qsv "output.mp4"`
     `avconv -i "input.mp4" -q 20 -c:v mpeg2_qsv "output.ts"`
-    `avconv -vsync cfr -i "input.mpg" -qpi 22 -qpi 25 -qpi 27 -c:v h264_qsv "output.mp4"`
+    `avconv -vsync cfr -i "input.mpg" -qpi 22 -qpp 25 -qpb 27 -c:v h264_qsv "output.mp4"`
 
 QSV decode/encode  
     `avconv -c:v mpeg2_qsv -i "input.mpg" -q 20 -c:v h264_qsv "output.mp4"`
