@@ -95,18 +95,25 @@ static void qsv_surface_free(QSVContext *q)
     av_free(q->pts);
 }
 
-static int qsv_surface_alloc(QSVContext *q, mfxFrameAllocRequest *req)
+static int qsv_surface_alloc(QSVContext *q)
 {
-    int width  = FFALIGN(req->Info.Width, 32);
-    int height = FFALIGN(req->Info.Height, 32);
-    int ret    = AVERROR(ENOMEM);
+    int width, height, ret;
+    mfxFrameAllocRequest req = { { 0 } };
 
-    q->surfaces = av_mallocz_array(q->nb_surfaces, sizeof(*q->surfaces));
-    q->dts      = av_mallocz_array(q->nb_surfaces, sizeof(*q->dts));
-    q->pts      = av_mallocz_array(q->nb_surfaces, sizeof(*q->pts));
+    ret = MFXVideoDECODE_QueryIOSurf(q->session, &q->param, &req);
+    if (ret < 0)
+        return ff_qsv_error(ret);
+
+    q->nb_surfaces = req.NumFrameSuggested + q->param.AsyncDepth;
+    q->surfaces    = av_mallocz_array(q->nb_surfaces, sizeof(*q->surfaces));
+    q->dts         = av_mallocz_array(q->nb_surfaces, sizeof(*q->dts));
+    q->pts         = av_mallocz_array(q->nb_surfaces, sizeof(*q->pts));
 
     if (!q->surfaces || !q->dts || !q->pts)
         goto fail;
+
+    width  = FFALIGN(req.Info.Width, 32);
+    height = FFALIGN(req.Info.Height, 32);
 
     for (int i = 0; i < q->nb_surfaces; i++) {
         if (!(q->surfaces[i].Data.Y = av_mallocz(width * height * 12 / 8)))
@@ -124,17 +131,48 @@ static int qsv_surface_alloc(QSVContext *q, mfxFrameAllocRequest *req)
 fail:
     if (ret)
         qsv_surface_free(q);
+    else
+        q->last_ret = MFX_ERR_MORE_DATA;
 
     return ret;
+}
+
+static void qsv_setup(AVCodecContext *c, QSVContext *q)
+{
+    c->width         = q->param.mfx.FrameInfo.CropW;
+    c->height        = q->param.mfx.FrameInfo.CropH;
+    c->coded_width   = q->param.mfx.FrameInfo.Width;
+    c->coded_height  = q->param.mfx.FrameInfo.Height;
+
+    c->time_base.den = q->param.mfx.FrameInfo.FrameRateExtN;
+    c->time_base.num = q->param.mfx.FrameInfo.FrameRateExtD;
+}
+
+static int qsv_reinit(AVCodecContext *c, QSVContext *q)
+{
+    int ret;
+
+    if ((ret = MFXVideoDECODE_Reset(q->session, &q->param)));
+        return ff_qsv_error(ret);
+
+    qsv_surface_free(q);
+
+    qsv_setup(c, q);
+
+    if ((ret = qsv_surface_alloc(q)))
+        return ff_qsv_error(ret);
+
+    q->reinit = 0;
+
+    return 0;
 }
 
 int ff_qsv_init(AVCodecContext *c, QSVContext *q)
 {
     int ret;
-    mfxIMPL impl             = MFX_IMPL_AUTO_ANY;
-    mfxVersion ver           = { { QSV_VERSION_MINOR, QSV_VERSION_MAJOR } };
-    mfxBitstream *bs         = &q->bs;
-    mfxFrameAllocRequest req = { { 0 } };
+    mfxIMPL impl     = MFX_IMPL_AUTO_ANY;
+    mfxVersion ver   = { { QSV_VERSION_MINOR, QSV_VERSION_MAJOR } };
+    mfxBitstream *bs = &q->bs;
 
     if ((ret = codec_id_to_mfx(c->codec_id)) < 0)
         return ret;
@@ -165,14 +203,9 @@ int ff_qsv_init(AVCodecContext *c, QSVContext *q)
     bs->DataFlag   = MFX_BITSTREAM_COMPLETE_FRAME;
     bs->DataLength = bs->DataOffset = 0;
 
-    ret = MFXVideoDECODE_QueryIOSurf(q->session, &q->param, &req);
-    if (ret < 0)
-        return ff_qsv_error(ret);
+    qsv_setup(c, q);
 
-    q->nb_surfaces = req.NumFrameSuggested + q->param.AsyncDepth;
-    q->last_ret    = MFX_ERR_MORE_DATA;
-
-    return qsv_surface_alloc(q, &req);
+    return qsv_surface_alloc(q);
 }
 
 static int bitstream_realloc(mfxBitstream *bs, int size)
@@ -291,10 +324,18 @@ int ff_qsv_decode(AVCodecContext *avctx, QSVContext *q,
 
     ret = q->last_ret;
     do {
+        if (q->reinit) // Flush the frame queue
+            bs = NULL;
+
         if (ret == MFX_ERR_MORE_DATA) {
             if (!bs) {
-                break;
-            } else if (q->pending) {
+                // We are done flushing the decoded frame queue
+                if (q->reinit)
+                    ret = qsv_reinit(avctx, q);
+
+                return size;
+            }
+            if (q->pending) {
                 AVPacket pkt = { 0 };
 
                 ff_packet_list_get(&q->pending, &q->pending_end, &pkt);
@@ -307,8 +348,10 @@ int ff_qsv_decode(AVCodecContext *avctx, QSVContext *q,
 
                 av_packet_unref(&pkt);
 
-                if (ret < 0)
+                if (ret < 0) {
+                    q->last_ret = MFX_ERR_MORE_DATA;
                     return ret;
+                }
             } else if (!size) {
                 // Flush cached frames when EOF
                 bs = NULL;
@@ -336,6 +379,10 @@ int ff_qsv_decode(AVCodecContext *avctx, QSVContext *q,
         break;
     case MFX_WRN_DEVICE_BUSY:
         return AVERROR(EAGAIN);
+    case MFX_WRN_INCOMPATIBLE_VIDEO_PARAM:
+        q->reinit = 1;
+        q->last_ret = MFX_ERR_MORE_SURFACE;
+        return size;
     default:
         break;
     }
