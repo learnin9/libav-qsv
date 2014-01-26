@@ -299,12 +299,12 @@ static int get_dts(QSVContext *q, int64_t pts,  int64_t *dts)
         if (q->pts[i] == pts)
             break;
     }
+
     if (i == q->nb_surfaces) {
-        av_log(q, AV_LOG_ERROR,
-               "Requested pts %"PRId64" does not match any dts\n",
-               pts);
-        return AVERROR_BUG;
+        *dts = AV_NOPTS_VALUE;
+        return 0;
     }
+
     *dts = q->dts[i];
 
     q->pts[i] = AV_NOPTS_VALUE;
@@ -315,6 +315,10 @@ static int get_dts(QSVContext *q, int64_t pts,  int64_t *dts)
 static int put_dts(QSVContext *q, int64_t pts, int64_t dts)
 {
     int i;
+
+    if (pts == AV_NOPTS_VALUE)
+        return 0;
+
     for (i = 0; i < q->nb_surfaces; i++) {
         if (q->pts[i] == AV_NOPTS_VALUE)
             break;
