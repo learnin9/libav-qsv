@@ -30,30 +30,49 @@
 #include "libavutil/avutil.h"
 
 
-typedef struct QSVContext {
+typedef struct QSVDecTimeStamp {
+    int64_t pts;
+    int64_t dts;
+} QSVDecTimeStamp;
+
+typedef struct QSVDecBuffer {
+    mfxFrameSurface1 surface;
+    mfxSyncPoint sync;
+    struct QSVDecBuffer *next;
+    struct QSVDecBuffer *pool;
+} QSVDecBuffer;
+
+typedef struct QSVDecContext {
     AVClass *class;
     mfxSession session;
     mfxVideoParam param;
-    mfxFrameSurface1 *surfaces;
-    int64_t *dts;
-    int64_t *pts;
-    int nb_surfaces;
-    mfxSyncPoint sync;
+    mfxFrameAllocRequest req;
     mfxBitstream bs;
+    QSVDecTimeStamp *ts;
+    int nb_ts;
+    int put_dts_cnt;
+    int decoded_cnt;
+    int ts_by_qsv;
     int last_ret;
+    int need_reinit;
     int async_depth;
-    int reinit;
-    AVPacketList *pending, *pending_end;
-} QSVContext;
+    int timeout;
+    AVPacketList *pending_dec, *pending_dec_end;
+    QSVDecBuffer *buf_pool;
+    QSVDecBuffer *pending_sync, *pending_sync_end;
+    int nb_sync;
+} QSVDecContext;
 
-int ff_qsv_dec_init(AVCodecContext *s, QSVContext *q);
+int ff_qsv_dec_init(AVCodecContext *s, QSVDecContext *q);
 
-int ff_qsv_dec_frame(AVCodecContext *s, QSVContext *q,
+int ff_qsv_dec_frame(AVCodecContext *s, QSVDecContext *q,
                      AVFrame *frame, int *got_frame,
                      AVPacket *avpkt);
 
-int ff_qsv_dec_flush(QSVContext *q);
+int ff_qsv_dec_flush(QSVDecContext *q);
 
-int ff_qsv_dec_close(QSVContext *q);
+int ff_qsv_dec_close(QSVDecContext *q);
+
+int ff_qsv_dec_reinit(AVCodecContext *s, QSVDecContext *q);
 
 #endif /* AVCODEC_QSVDEC_H */
