@@ -25,10 +25,13 @@
 #include <sys/types.h>
 #include <mfx/mfxvideo.h>
 
+#include "libavutil/opt.h"
+#include "libavutil/internal.h"
+
 #include "avcodec.h"
 #include "internal.h"
-#include "h264.h"
 #include "qsv.h"
+#include "qsvdec.h"
 
 typedef struct QSVH264Context {
     AVClass *class;
@@ -65,7 +68,7 @@ static av_cold int qsv_dec_init(AVCodecContext *avctx)
 
     bs->MaxLength = bs->DataLength;
 
-    ret = ff_qsv_init(avctx, &q->qsv);
+    ret = ff_qsv_dec_init(avctx, &q->qsv);
     if (ret < 0) {
         av_freep(&bs->Data);
         av_bitstream_filter_close(q->bsf);
@@ -95,11 +98,11 @@ static int qsv_dec_frame(AVCodecContext *avctx, void *data,
         pkt.data = p;
         pkt.size = size;
 
-        ret = ff_qsv_decode(avctx, &q->qsv, frame, got_frame, &pkt);
+        ret = ff_qsv_dec_frame(avctx, &q->qsv, frame, got_frame, &pkt);
 
         av_free(p);
     } else
-        ret = ff_qsv_decode(avctx, &q->qsv, frame, got_frame, avpkt);
+        ret = ff_qsv_dec_frame(avctx, &q->qsv, frame, got_frame, avpkt);
 
     return ret;
 }
@@ -107,7 +110,7 @@ static int qsv_dec_frame(AVCodecContext *avctx, void *data,
 static int qsv_dec_close (AVCodecContext *avctx)
 {
     QSVH264Context *q = avctx->priv_data;
-    int ret = ff_qsv_close(&q->qsv);
+    int ret = ff_qsv_dec_close(&q->qsv);
 
     av_bitstream_filter_close(q->bsf);
     av_freep(&q->qsv.bs.Data);
@@ -118,7 +121,7 @@ static void qsv_dec_flush(AVCodecContext *avctx)
 {
     QSVH264Context *q = avctx->priv_data;
 
-    ff_qsv_flush(&q->qsv);
+    ff_qsv_dec_flush(&q->qsv);
 }
 
 #define OFFSET(x) offsetof(QSVH264Context, x)

@@ -22,7 +22,6 @@
 
 
 #include <stdint.h>
-#include <string.h>
 #include <sys/types.h>
 #include <mfx/mfxvideo.h>
 
@@ -32,6 +31,7 @@
 #include "avcodec.h"
 #include "internal.h"
 #include "qsv.h"
+#include "qsvdec.h"
 
 //static const uint8_t fake_ipic[] = { 0x00, 0x00, 0x01, 0x00, 0x00, 0x0F, 0xFF, 0xF8 };
 
@@ -50,7 +50,7 @@ static av_cold int qsv_dec_init(AVCodecContext *avctx)
 
     bs->MaxLength = bs->DataLength;
 
-    ret = ff_qsv_init(avctx, q);
+    ret = ff_qsv_dec_init(avctx, q);
     if (ret < 0) {
         av_freep(&bs->Data);
     }
@@ -65,7 +65,7 @@ static int qsv_dec_frame(AVCodecContext *avctx, void *data,
     AVFrame *frame = data;
     int ret;
 
-    ret = ff_qsv_decode(avctx, q, frame, got_frame, avpkt);
+    ret = ff_qsv_dec_frame(avctx, q, frame, got_frame, avpkt);
 
     return ret;
 }
@@ -73,7 +73,7 @@ static int qsv_dec_frame(AVCodecContext *avctx, void *data,
 static int qsv_dec_close (AVCodecContext *avctx)
 {
     QSVContext *q = avctx->priv_data;
-    int ret = ff_qsv_close(q);
+    int ret = ff_qsv_dec_close(q);
 
     av_freep(&q->bs.Data);
     return ret;
@@ -83,7 +83,7 @@ static void qsv_dec_flush(AVCodecContext *avctx)
 {
     QSVContext *q = avctx->priv_data;
 
-    ff_qsv_flush(q);
+    ff_qsv_dec_flush(q);
 }
 
 #define OFFSET(x) offsetof(QSVContext, x)
