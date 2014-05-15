@@ -132,7 +132,6 @@ Component options:
 
 Hardware accelerators:
   --enable-dxva2           enable DXVA2 code
-  --enable-qsv             enable QSV code
   --enable-vaapi           enable VAAPI code
   --enable-vda             enable VDA code
   --enable-vdpau           enable VDPAU code
@@ -187,6 +186,7 @@ External library support:
   --enable-libfreetype     enable libfreetype [no]
   --enable-libgsm          enable GSM de/encoding via libgsm [no]
   --enable-libilbc         enable iLBC de/encoding via libilbc [no]
+  --enable-libmfx          enable hardware decoding via libmfx [no]
   --enable-libmp3lame      enable MP3 encoding via libmp3lame [no]
   --enable-libopencore-amrnb enable AMR-NB de/encoding via libopencore-amrnb [no]
   --enable-libopencore-amrwb enable AMR-WB decoding via libopencore-amrwb [no]
@@ -1133,6 +1133,7 @@ EXTERNAL_LIBRARY_LIST="
     libfreetype
     libgsm
     libilbc
+    libmfx
     libmp3lame
     libopencore_amrnb
     libopencore_amrwb
@@ -1174,7 +1175,6 @@ FEATURE_LIST="
 
 HWACCEL_LIST="
     dxva2
-    qsv
     vaapi
     vda
     vdpau
@@ -1761,6 +1761,8 @@ h263i_decoder_select="h263_decoder"
 h263p_encoder_select="h263_encoder"
 h264_decoder_select="cabac golomb h264chroma h264dsp h264pred h264qpel videodsp"
 h264_decoder_suggest="error_resilience"
+h264_qsv_decoder_deps="libmfx"
+h264_qsv_decoder_select="h264_mp4toannexb_bsf"
 hevc_decoder_select="cabac dsputil golomb videodsp"
 huffyuv_decoder_select="dsputil"
 huffyuv_encoder_select="dsputil huffman"
@@ -1800,6 +1802,7 @@ mpeg1video_decoder_select="error_resilience mpegvideo"
 mpeg1video_encoder_select="aandcttables mpegvideoenc"
 mpeg2video_decoder_select="error_resilience mpegvideo"
 mpeg2video_encoder_select="aandcttables mpegvideoenc"
+mpeg2video_qsv_decoder_deps="libmfx"
 mpeg4_decoder_select="h263_decoder mpeg4video_parser"
 mpeg4_encoder_select="h263_encoder"
 msmpeg4v1_decoder_select="h263_decoder"
@@ -1892,8 +1895,6 @@ h263_vdpau_hwaccel_deps="vdpau"
 h263_vdpau_hwaccel_select="h263_decoder"
 h264_dxva2_hwaccel_deps="dxva2"
 h264_dxva2_hwaccel_select="h264_decoder"
-h264_qsv_decoder_deps="qsv"
-h264_qsv_decoder_select="h264_mp4toannexb_bsf"
 h264_vaapi_hwaccel_deps="vaapi"
 h264_vaapi_hwaccel_select="h264_decoder"
 h264_vda_hwaccel_deps="vda"
@@ -1904,7 +1905,6 @@ mpeg1_vdpau_hwaccel_deps="vdpau"
 mpeg1_vdpau_hwaccel_select="mpeg1video_decoder"
 mpeg2_dxva2_hwaccel_deps="dxva2"
 mpeg2_dxva2_hwaccel_select="mpeg2video_decoder"
-mpeg2_qsv_decoder_deps="qsv"
 mpeg2_vaapi_hwaccel_deps="vaapi"
 mpeg2_vaapi_hwaccel_select="mpeg2video_decoder"
 mpeg2_vdpau_hwaccel_deps="vdpau"
@@ -4041,6 +4041,7 @@ enabled libgsm            && { for gsm_hdr in "gsm.h" "gsm/gsm.h"; do
                                    check_lib "${gsm_hdr}" gsm_create -lgsm && break;
                                done || die "ERROR: libgsm not found"; }
 enabled libilbc           && require libilbc ilbc.h WebRtcIlbcfix_InitDecode -lilbc
+enabled libmfx            && require_pkg_config libmfx "mfx/mfxvideo.h" MFXInit
 enabled libmp3lame        && require "libmp3lame >= 3.98.3" lame/lame.h lame_set_VBR_quality -lmp3lame
 enabled libopencore_amrnb && require libopencore_amrnb opencore-amrnb/interf_dec.h Decoder_Interface_init -lopencore-amrnb
 enabled libopencore_amrwb && require libopencore_amrwb opencore-amrwb/dec_if.h D_IF_init -lopencore-amrwb
@@ -4079,7 +4080,6 @@ enabled openssl           && { check_lib openssl/ssl.h SSL_library_init -lssl -l
                                check_lib openssl/ssl.h SSL_library_init -lssl -lcrypto -lws2_32 -lgdi32 ||
                                die "ERROR: openssl not found"; }
 
-enabled qsv                && require_pkg_config libmfx "mfx/mfxvideo.h" MFXInit
 
 if enabled gnutls; then
     { check_lib nettle/bignum.h nettle_mpz_get_str_256 -lnettle -lhogweed -lgmp && enable nettle; } ||
