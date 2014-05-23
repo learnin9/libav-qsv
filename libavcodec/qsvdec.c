@@ -309,18 +309,18 @@ static int put_dts(QSVDecContext *q, int64_t pts, int64_t dts)
         q->put_dts_cnt = 0;
         if ((ret = realloc_ts(q, 0, q->req.NumFrameSuggested)) < 0)
             return ret;
-    } else if (!q->decoded_cnt && q->nb_ts == q->put_dts_cnt) {
-        // For decoder delay
+    }
+
+    for (i = 0; i < q->nb_ts; i++) {
+        if (q->ts[i].pts == AV_NOPTS_VALUE)
+            break;
+    }
+
+    if (i == q->nb_ts) {
         if ((ret = realloc_ts(q, q->nb_ts, q->nb_ts * 2)) < 0)
-            return ret;
-    } else if (q->decoded_cnt == 1 && q->nb_ts < (q->put_dts_cnt + 32)) {
-        // For frame reordering
-        // I[31]P[30]B[29]B[28] ... B[1]B[0] (Number in [] is display order)
-        if ((ret = realloc_ts(q, q->nb_ts, q->put_dts_cnt + 32)) < 0)
             return ret;
     }
 
-    i = q->put_dts_cnt % q->nb_ts;
     q->ts[i].pts = pts;
     q->ts[i].dts = dts;
     q->put_dts_cnt++;
