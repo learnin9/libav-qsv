@@ -476,7 +476,7 @@ int ff_qsv_dec_flush(QSVDecContext *q)
 {
     int ret;
 
-    if ((ret = MFXVideoDECODE_Reset(q->session, &q->param)));
+    if ((ret = MFXVideoDECODE_Reset(q->session, &q->param)))
         ret = ff_qsv_error(ret);
 
     q->last_ret      = MFX_ERR_MORE_DATA;
