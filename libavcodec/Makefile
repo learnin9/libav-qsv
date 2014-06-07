@@ -207,6 +207,7 @@ OBJS-$(CONFIG_H264_QSV_DECODER)        += qsvdec_h264.o qsvdec.o qsv.o
 OBJS-$(CONFIG_HEVC_DECODER)            += hevc.o hevc_mvs.o hevc_ps.o hevc_sei.o \
                                           hevc_cabac.o hevc_refs.o hevcpred.o    \
                                           hevcdsp.o hevc_filter.o
+OBJS-$(CONFIG_HEVC_QSV_DECODER)        += qsvdec_hevc.o qsvdec.o qsv.o
 OBJS-$(CONFIG_HNM4_VIDEO_DECODER)      += hnm4video.o
 OBJS-$(CONFIG_HUFFYUV_DECODER)         += huffyuv.o huffyuvdec.o
 OBJS-$(CONFIG_HUFFYUV_ENCODER)         += huffyuv.o huffyuvenc.o
